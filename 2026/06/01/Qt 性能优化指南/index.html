@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="x5-fullscreen" content="true">
+<meta name="full-screen" content="yes">
+<meta name="theme-color" content="#317EFB" />
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=0" name="viewport">
+<meta name="description" content="Qt 性能优化指南在使用 Qt 开发应用时，对字符串的处理和对大量数据的渲染往往是性能瓶颈。本文总结了这几类常见场景的优化策略。  1. QStringBuilder 字符串拼接优化频繁的 QString 拼接（使用 + 运算符）会导致多次内存分配和字符串拷贝，影响性能。 可以通过引入 &lt;QStringBuilder&gt; 使用 % 替代 +，底层会先计算总长度，只分配一次内存。 1234">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Qt 性能优化指南">
+<meta property="og:url" content="http://example.com/2026/06/01/Qt%20%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Qt 性能优化指南在使用 Qt 开发应用时，对字符串的处理和对大量数据的渲染往往是性能瓶颈。本文总结了这几类常见场景的优化策略。  1. QStringBuilder 字符串拼接优化频繁的 QString 拼接（使用 + 运算符）会导致多次内存分配和字符串拷贝，影响性能。 可以通过引入 &lt;QStringBuilder&gt; 使用 % 替代 +，底层会先计算总长度，只分配一次内存。 1234">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-06-01T03:09:11.000Z">
+<meta property="article:modified_time" content="2026-10-14T13:18:32.592Z">
+<meta property="article:author" content="Shi.Yue">
+<meta property="article:tag" content="Qt">
+<meta property="article:tag" content="性能优化">
+<meta property="article:tag" content="ModelView">
+<meta property="article:tag" content="QStringBuilder">
+<meta name="twitter:card" content="summary">
+
+
+<title >Qt 性能优化指南</title>
+
+<!-- Favicon -->
+
+    <link href='/img/favicon.svg?v=2.2.4' rel='icon' type='image/png' sizes='16x16' ></link>
+
+
+    <link href='/img/favicon.svg?v=2.2.4' rel='icon' type='image/png' sizes='32x32' ></link>
+
+
+
+
+<!-- Plugin -->
+
+
+
+
+    
+<link rel="stylesheet" href="/css/plugins/bootstrap.row.css">
+
+    
+<link rel="stylesheet" href="https://unpkg.com/@fancyapps/ui@4.0/dist/fancybox.css">
+
+    
+    
+
+
+
+
+<!-- Icon -->
+
+    
+<link rel="stylesheet" href="/css/plugins/font-awesome.min.css">
+
+
+
+
+<!-- Variable -->
+<script>window.ASYNC_CONFIG = {"hostname":"example.com","author":"Shi.Yue","root":"/","typed_text":["C++ Developer"],"theme_version":"2.2.4","theme":{"switch":true,"default":"style-light"},"favicon":{"logo":"/img/favicon.svg","icon16":"/img/favicon.svg","icon32":"/img/favicon.svg","apple_touch_icon":null,"webmanifest":null,"visibilitychange":false,"hidden":"/failure.ico","show_text":"(/≧▽≦/)Hey! Good again!","hide_text":"(●—●)Oh, crash!"},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}.","hits":"${hits} results found","hits_time":"${hits} results found in ${time} ms","author":"Post author: ","copyright_link":"Post link: ","copyright_license_title":"Copyright Notice: ","copyright_license_content":"All articles in this blog are licensed under undefined unless otherwise stated.","copy_success":"Copied","copy_failure":"Copy failed","open_read_mode":"Enter reading mode","exit_read_mode":"Exit reading mode","notice_outdate_message":"It has been undefined days since the last update, the content of the article may be outdated.","sticky":"TOP","just":"Just","min":"minutes ago","hour":"hours ago","day":"days ago","month":"months ago"},"swup":false,"plugin":{"flickr_justified_gallery":"https://unpkg.com/flickr-justified-gallery@latest/dist/fjGallery.min.js"},"icons":{"sun":"far fa-sun","moon":"far fa-moon","play":"fas fa-play","email":"far fa-envelope","next":"fas fa-arrow-right","calendar":"far fa-calendar-alt","clock":"far fa-clock","user":"far fa-user","back_top":"fas fa-arrow-up","close":"fas fa-times","search":"fas fa-search","reward":"fas fa-hand-holding-usd","toc_tag":"fas fa-th-list","read":"fas fa-book-reader","arrows":"fas fa-arrows-alt-h","double_arrows":"fas fa-angle-double-down","copy":"fas fa-copy"},"icontype":"font","highlight":{"plugin":"highlighjs","theme":true,"copy":true,"lang":true,"title":"default","height_limit":false},"toc":{"post_title":false},"live_time":{"start_time":"","prefix":"The blog has been lovely to run undefined day"},"danmu":{"enable":false,"el":".trm-banner"}};</script>
+<script id="async-page-config">window.PAGE_CONFIG = {"isPost":true,"isHome":false,"postUpdate":"2026-10-14 21:18:32"};</script>
+
+<!-- Theme mode css -->
+<link data-swup-theme rel="stylesheet" href="/css/index.css?v=2.2.4" id="trm-switch-style">
+<script>
+    let defaultMode = ASYNC_CONFIG.theme.default !=='auto' ?  ASYNC_CONFIG.theme.default : (window.matchMedia("(prefers-color-scheme: light)").matches ? 'style-light' : 'style-dark')
+    let catchMode = localStorage.getItem('theme-mode') || defaultMode;
+    let type = catchMode === 'style-dark' ? 'add' : 'remove';
+    document.documentElement.classList[type]('dark')
+</script>
+
+<!-- CDN -->
+
+
+    
+    
+
+
+
+<!-- Site Analytics -->
+
+ 
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+
+  <!-- app wrapper -->
+  <div class="trm-app-frame">
+
+    <!-- page preloader -->
+    <div class="trm-preloader">
+    <div class="trm-holder">
+        <div class="preloader">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+</div>
+    <!-- page preloader end -->
+
+    <!-- change mode preloader -->
+    <div class="trm-mode-swich-animation-frame">
+    <div class="trm-mode-swich-animation">
+        <i class="i-sun"><i class="iconfont far fa-sun"></i></i>
+        <div class="trm-horizon"></div>
+        <i class="i-moon"><i class="iconfont far fa-moon"></i></i>
+    </div>
+</div>
+    <!-- change mode preloader end -->
+
+      <!-- scroll container -->
+      <div id="trm-dynamic-content" class="trm-swup-animation">
+        <div id="trm-scroll-container" class="trm-scroll-container" style="opacity: 0">
+            <!-- top bar -->
+            <header class="trm-top-bar">
+	<div class="container">
+		<div class="trm-left-side">
+			<!-- logo -->
+<a href="/" class="trm-logo-frame trm-anima-link">
+    
+        <img alt="logo" src="/img/favicon.svg">
+    
+    
+        <div class="trm-logo-text">
+            Shi<span>Yue</span>
+        </div>
+    
+</a>
+<!-- logo end -->
+		</div>
+		<div class="trm-right-side">
+			<!-- menu -->
+<div class="trm-menu">
+    <nav>
+        <ul>
+            
+            <li class="menu-item-has-children ">
+                <a  href="/" target="">
+                    主页
+                </a>
+                
+            </li>
+            
+            <li class="menu-item-has-children ">
+                <a data-no-swup href="/archives/" target="">
+                    归档
+                </a>
+                
+                <ul>
+                    
+                    <li>
+                        <a  href="/categories/" target="">
+                            分类
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a  href="/tags/" target="">
+                            标签
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a  href="/archives/" target="">
+                            时间线
+                        </a>
+                    </li>
+                    
+                </ul>
+                
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+<!-- menu end -->
+			
+    <!-- mode switcher place -->
+    <div class="trm-mode-switcher-place">
+        <div class="trm-mode-switcher">
+            <i class="iconfont far fa-sun"></i>
+            <input class="tgl tgl-light" id="trm-swich" type="checkbox">
+            <label class="trm-swich" for="trm-swich"></label>
+            <i class="iconfont far fa-moon"></i>
+        </div>
+    </div>
+    <!-- mode switcher place end -->
+
+			
+		</div>
+		<div class="trm-menu-btn">
+			<span></span>
+		</div>
+	</div>
+</header>
+            <!-- top bar end -->
+
+            <!-- body -->
+            
+<div class="trm-content-start">
+    <!-- banner -->
+    <div class="trm-banner">
+    
+    <!-- banner cover -->
+    <img style="object-position:top;object-fit:cover;" alt="banner" class="trm-banner-cover" src="/img/banner.png">
+    <!-- banner cover end -->
+    
+
+    <!-- banner content -->
+    <div class="trm-banner-content trm-overlay">
+        <div class="container">
+            <div class="row">
+                
+                <div class="col-lg-4"></div>
+                
+                <div class="col-lg-8">
+
+                    <!-- banner title -->
+                    <div class="trm-banner-text ">
+                        <div class="trm-label trm-mb-20">
+                            NEWS LETTER
+                        </div>
+                        <h1 class="trm-mb-30 trm-hsmb-font">
+                            Qt 性能优化指南
+                        </h1>
+
+                        
+                            <ul class="trm-breadcrumbs trm-label">
+                                <li>
+                                    <a href="/" class="trm-anima-link">Home</a>
+                                </li>
+                                <li>
+                                    <span>
+                                        2026
+                                    </span>
+                                </li>
+                            </ul>
+                        
+                    </div>
+                    <!-- banner title end -->
+
+                    <!-- scroll hint -->
+                    <span id="scroll-triger" class="trm-scroll-hint-frame">
+                        <div class="trm-scroll-hint"></div>
+                        <span class="trm-label">Scroll down</span>
+                    </span>
+                    <!-- scroll hint end -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- banner content end -->
+</div>
+    <!-- banner end -->
+    <div class="container">
+        <div class="row">
+            
+                <div class="trm-page-sidebar col-lg-4 hidden-sm">
+                    <!-- main card -->
+                    <div class="trm-main-card-frame trm-sidebar">
+    <div class="trm-main-card"> 
+        <!-- card header -->
+<div class="trm-mc-header">
+    <div class="trm-avatar-frame trm-mb-20">
+        <img alt="Avatar" class="trm-avatar" src="/img/avatar.jpg">
+    </div>
+    <h5 class="trm-name trm-mb-15">
+        Shi.Yue
+    </h5>
+    
+        <div class="trm-label">
+            I`m
+            <span class="trm-typed-text">
+                <!-- Words for theme.user.typedText -->
+            </span>
+        </div>
+    
+</div>
+<!-- card header end -->
+        <!-- sidebar social -->
+
+<div class="trm-divider trm-mb-40 trm-mt-40"></div>
+<div class="trm-social">
+    
+        <a href="https://github.com/shiyue-code/" title="github" rel="nofollow" target="_blank">
+            <i class="iconfont fab fa-github"></i>
+        </a>
+    
+</div>
+
+<!-- sidebar social end -->
+        <!-- info -->
+<div class="trm-divider trm-mb-40 trm-mt-40"></div>
+<ul class="trm-table trm-mb-20">
+    
+        <li>
+            <div class="trm-label">
+                github:
+            </div>
+            <div class="trm-label trm-label-light">
+                https://github.com/shiyue-code/
+            </div>
+        </li>
+    
+</ul>
+<!-- info end -->
+
+        
+    <div class="trm-divider trm-mb-40 trm-mt-40"></div>
+    <!-- action button -->
+    <div class="text-center">
+        <a href="mailto:shiyue01oct@foxmail.com" class="trm-btn">
+            Contact Me
+            <i class="iconfont far fa-envelope"></i>
+        </a>
+    </div>
+    <!-- action button end -->
+
+    </div>
+</div>
+                    <!-- main card end -->
+                </div>
+            
+            <div class="trm-page-content col-lg-8">
+                <div id="trm-content" class="trm-content">
+                    <div class="trm-post-info row hidden-sm">
+    <div class="col-sm-4">
+        <div class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-calendar-alt trm-icon"></i><br>
+            06/01
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-clock trm-icon"></i><br>
+            11:09
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div id="post-author" class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-user trm-icon"></i><br>
+            Shi.Yue
+        </div>
+    </div>
+</div>
+<div class="trm-card ">
+    <article id="article-container" class="trm-publication">
+    <h1 id="Qt-性能优化指南"><a href="#Qt-性能优化指南" class="headerlink" title="Qt 性能优化指南"></a>Qt 性能优化指南</h1><p>在使用 Qt 开发应用时，对字符串的处理和对大量数据的渲染往往是性能瓶颈。本文总结了这几类常见场景的优化策略。</p>
+<hr>
+<h2 id="1-QStringBuilder-字符串拼接优化"><a href="#1-QStringBuilder-字符串拼接优化" class="headerlink" title="1. QStringBuilder 字符串拼接优化"></a>1. QStringBuilder 字符串拼接优化</h2><p>频繁的 <code>QString</code> 拼接（使用 <code>+</code> 运算符）会导致多次内存分配和字符串拷贝，影响性能。</p>
+<p>可以通过引入 <code>&lt;QStringBuilder&gt;</code> 使用 <code>%</code> 替代 <code>+</code>，底层会先计算总长度，只分配一次内存。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QStringBuilder&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 低效拼接：产生多个临时 QString 对象，多次分配内存</span></span><br><span class="line">QString str1 = <span class="string">&quot;Name: &quot;</span> + name + <span class="string">&quot;, Age: &quot;</span> + QString::<span class="built_in">number</span>(age);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 高效拼接：编译期解析表达式，计算总长度后一次性分配内存</span></span><br><span class="line">QString str2 = <span class="string">&quot;Name: &quot;</span> % name % <span class="string">&quot;, Age: &quot;</span> % QString::<span class="built_in">number</span>(age);</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="2-QStringLiteral-编译期字符串"><a href="#2-QStringLiteral-编译期字符串" class="headerlink" title="2. QStringLiteral 编译期字符串"></a>2. QStringLiteral 编译期字符串</h2><p>对于代码中的字符串常量，不要直接写 <code>&quot;...&quot;</code> 或 <code>QString(&quot;...&quot;)</code>，应使用 <code>QStringLiteral</code> 宏。</p>
+<ul>
+<li><strong>原理</strong>：编译器会在编译阶段直接生成 <code>QString</code> 所需的内部数据结构，并放在只读数据段中。</li>
+<li><strong>优势</strong>：程序运行时<strong>零内存分配</strong>（无需 <code>new</code>）且<strong>零拷贝</strong>（避免 UTF-8 运行时解码）。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 每次调用都会进行 UTF-8 解析并分配堆内存</span></span><br><span class="line"><span class="keyword">if</span> (obj-&gt;<span class="built_in">objectName</span>() == <span class="string">&quot;MyButton&quot;</span>) &#123; <span class="comment">/* ... */</span> &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 零开销</span></span><br><span class="line"><span class="keyword">if</span> (obj-&gt;<span class="built_in">objectName</span>() == <span class="built_in">QStringLiteral</span>(<span class="string">&quot;MyButton&quot;</span>)) &#123; <span class="comment">/* ... */</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<div class="trm-note tip"><div class="trm-note-title">TIP</div><p>仅在处理字符串<strong>常量</strong>时使用 <code>QStringLiteral</code>。对于会动态变化的字符串，使用常规构造或 <code>QStringBuilder</code> 即可。</p>
+</div>
+
+<hr>
+<h2 id="3-海量数据展示-Model-View-架构"><a href="#3-海量数据展示-Model-View-架构" class="headerlink" title="3. 海量数据展示 (Model&#x2F;View 架构)"></a>3. 海量数据展示 (Model&#x2F;View 架构)</h2><p>当需要展示成千上万甚至百万条数据时，**严禁使用 <code>QTableWidget</code> 或 <code>QListWidget</code>**，这会为每个单元格创建一个 UI 控件，导致严重的卡顿和内存暴涨。</p>
+<p><strong>正确做法</strong>：使用 <code>QTableView</code> &#x2F; <code>QListView</code> 配合自定义继承自 <code>QAbstractTableModel</code> 的数据模型，实现数据的<strong>按需渲染</strong>（仅绘制屏幕可见区域的数据）。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// QAbstractTableModel 中的 data 方法示例</span></span><br><span class="line"><span class="function">QVariant <span class="title">MyModel::data</span><span class="params">(<span class="type">const</span> QModelIndex &amp;index, <span class="type">int</span> role)</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!index.<span class="built_in">isValid</span>())</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">QVariant</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 仅针对显示角色渲染数据</span></span><br><span class="line">    <span class="keyword">if</span> (role == Qt::DisplayRole) &#123;</span><br><span class="line">        <span class="type">int</span> row = index.<span class="built_in">row</span>();</span><br><span class="line">        <span class="type">int</span> col = index.<span class="built_in">column</span>();</span><br><span class="line">        <span class="comment">// 根据行列快速获取数据并返回</span></span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">QString</span>(<span class="string">&quot;Row %1, Col %2&quot;</span>).<span class="built_in">arg</span>(row).<span class="built_in">arg</span>(col);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">QVariant</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<div class="trm-note warning"><div class="trm-note-title">WARNING</div><p>对于 <code>QTableWidget</code> &#x2F; <code>QListWidget</code>，Qt 内部使用 <code>QTableWidgetItem</code> 并且为每个元素实例化对象，不适合超过万级别的数据项。</p>
+</div>
+</article>
+    
+    
+
+</div>
+<div class="trm-post-next-prev row">
+    <div class="col-lg-12">
+        <!-- title -->
+        <h5 class="trm-title-with-divider">
+            Other Articles
+            <span data-number="02"></span>
+        </h5>
+    </div>
+    
+        <div class="col-lg-6">
+    <div class="trm-blog-card trm-scroll-animation">
+        <a href="/2026/06/01/Qt%20%E5%AF%B9%E8%B1%A1%E6%A0%91%E4%B8%8E%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" class="trm-cover-frame trm-anima-link">
+            
+            
+                <img alt="cover" class="no-fancybox" src="/img/block.jpg">
+            
+        </a>
+        
+        <div class="trm-card-descr">
+            <div class="trm-label trm-category trm-mb-20">
+                <a href=" /categories/Qt/">
+                    Qt
+                </a>
+            </div>
+            <h5>
+                <a href="/2026/06/01/Qt%20%E5%AF%B9%E8%B1%A1%E6%A0%91%E4%B8%8E%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" class="trm-anima-link">
+                    Qt 对象树与内存管理
+                </a>
+            </h5>
+            <div class="trm-divider trm-mb-20 trm-mt-20"></div>
+            <ul class="trm-card-data trm-label">
+                <li>26/06/01</li>
+                <li>11:09</li>
+                
+                
+            </ul>
+        </div>
+    </div>
+</div>
+    
+    
+        <div class="col-lg-6">
+    <div class="trm-blog-card trm-scroll-animation">
+        <a href="/2026/06/01/Qt%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8EUI%E6%9B%B4%E6%96%B0%E6%9C%BA%E5%88%B6/" class="trm-cover-frame trm-anima-link">
+            
+            
+                <img alt="cover" class="no-fancybox" src="/img/block.jpg">
+            
+        </a>
+        
+        <div class="trm-card-descr">
+            <div class="trm-label trm-category trm-mb-20">
+                <a href=" /categories/Qt/">
+                    Qt
+                </a>
+            </div>
+            <h5>
+                <a href="/2026/06/01/Qt%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8EUI%E6%9B%B4%E6%96%B0%E6%9C%BA%E5%88%B6/" class="trm-anima-link">
+                    Qt 多线程与UI更新机制
+                </a>
+            </h5>
+            <div class="trm-divider trm-mb-20 trm-mt-20"></div>
+            <ul class="trm-card-data trm-label">
+                <li>26/06/01</li>
+                <li>11:07</li>
+                
+                
+            </ul>
+        </div>
+    </div>
+</div>
+    
+</div>
+
+    
+
+
+
+                    <div class="trm-divider footer-divider"></div>
+
+                    <!-- footer -->
+                    <footer class="trm-footer-card trm-scroll-animation">
+
+    
+
+    
+
+    
+        <div class="trm-footer-item">
+            <span>
+                Powered by <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> v7.3.0
+            </span>
+            <span class="footer-separator" data-separator=" | "></span>
+            <span> 
+                Theme - 
+                <a rel="noopener" href='https://github.com/MaLuns/hexo-theme-async' target='_blank'>Async</a>
+                v2.2.4
+            </span>
+        </div>
+      
+
+     
+
+     
+</footer>
+                    <!-- footer end -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            <!-- body end -->
+
+            
+
+    <div id="post-toc" class="trm-post-toc">
+      <div class="trm-post-toc-header">
+        Article table of contents
+				<span id="post-toc-top">
+					TOP
+				</span>
+      </div>
+      <div class="trm-post-toc-content">
+        <ol class="trm-toc"><li class="trm-toc-item trm-toc-level-1" title="Qt 性能优化指南"><a rel="nofollow" class="trm-toc-link" href="#Qt-性能优化指南"><span class="trm-toc-number">1.</span> <span class="trm-toc-text">Qt 性能优化指南</span></a><ol class="trm-toc-child"><li class="trm-toc-item trm-toc-level-2" title="1. QStringBuilder 字符串拼接优化"><a rel="nofollow" class="trm-toc-link" href="#1-QStringBuilder-字符串拼接优化"><span class="trm-toc-number">1.1.</span> <span class="trm-toc-text">1. QStringBuilder 字符串拼接优化</span></a></li><li class="trm-toc-item trm-toc-level-2" title="2. QStringLiteral 编译期字符串"><a rel="nofollow" class="trm-toc-link" href="#2-QStringLiteral-编译期字符串"><span class="trm-toc-number">1.2.</span> <span class="trm-toc-text">2. QStringLiteral 编译期字符串</span></a></li><li class="trm-toc-item trm-toc-level-2" title="3. 海量数据展示 (Model&#x2F;View 架构)"><a rel="nofollow" class="trm-toc-link" href="#3-海量数据展示-Model-View-架构"><span class="trm-toc-number">1.3.</span> <span class="trm-toc-text">3. 海量数据展示 (Model&#x2F;View 架构)</span></a></li></ol></li></ol>
+      </div>
+    </div>
+
+            
+<div class="trm-fixed-container">
+    
+        <div class="trm-fixed-btn post-toc-btn" data-title="Open toc">
+            <i class="iconfont fas fa-th-list"></i>
+        </div>
+    
+    
+        <div class="trm-fixed-btn" data-title="Read Mode" onclick="asyncFun.switchReadMode()">
+            <i class="iconfont fas fa-book-reader"></i>
+        </div>
+    
+    
+    <div id="trm-back-top" class="trm-fixed-btn" data-title="Back To Top">
+        <i class="iconfont fas fa-arrow-up"></i>
+    </div>
+</div>
+        </div>
+      </div>
+      <!-- scroll container end -->
+  </div>
+  <!-- app wrapper end -->
+
+  
+  <!-- Plugin -->
+
+
+
+
+    
+    
+<script src="https://unpkg.com/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+
+    
+
+    
+        <script src="/js/plugins/typing.js?v=2.2.4"></script>
+    
+
+    
+
+    <!-- 数学公式 -->
+    
+
+    <!-- 评论插件 -->
+    
+        
+
+        
+    
+
+		
+
+
+
+
+    <!-- Service Worker -->
+    
+    <!-- baidu push -->
+    
+
+
+<script id="async-script" src="/js/main.js?v=2.2.4"></script>
+
+<!-- CDN -->
+
+
+    
+
+    
+
+    
+
+
+
+</body>
+
+</html>

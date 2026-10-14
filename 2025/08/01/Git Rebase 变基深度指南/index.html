@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="x5-fullscreen" content="true">
+<meta name="full-screen" content="yes">
+<meta name="theme-color" content="#317EFB" />
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=0" name="viewport">
+<meta name="description" content="Git Rebase（变基）深度指南git rebase 用于将一个分支上的修改“重新基地化”到另一个分支上。与 git merge 不同，Rebase 会修改提交历史，创造出一条干净、线性的历史提交线。  1. 基础用法：消除分支分叉在特性分支开发完毕、准备合并回主分支前，可以变基到最新的主分支，使提交历史保持一条直线： 12345git checkout featuregit rebase m">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git Rebase 变基深度指南">
+<meta property="og:url" content="http://example.com/2025/08/01/Git%20Rebase%20%E5%8F%98%E5%9F%BA%E6%B7%B1%E5%BA%A6%E6%8C%87%E5%8D%97/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Git Rebase（变基）深度指南git rebase 用于将一个分支上的修改“重新基地化”到另一个分支上。与 git merge 不同，Rebase 会修改提交历史，创造出一条干净、线性的历史提交线。  1. 基础用法：消除分支分叉在特性分支开发完毕、准备合并回主分支前，可以变基到最新的主分支，使提交历史保持一条直线： 12345git checkout featuregit rebase m">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-08-01T14:16:07.000Z">
+<meta property="article:modified_time" content="2026-10-14T13:18:32.571Z">
+<meta property="article:author" content="Shi.Yue">
+<meta property="article:tag" content="Git">
+<meta property="article:tag" content="历史重塑">
+<meta property="article:tag" content="版本控制">
+<meta name="twitter:card" content="summary">
+
+
+<title >Git Rebase 变基深度指南</title>
+
+<!-- Favicon -->
+
+    <link href='/img/favicon.svg?v=2.2.4' rel='icon' type='image/png' sizes='16x16' ></link>
+
+
+    <link href='/img/favicon.svg?v=2.2.4' rel='icon' type='image/png' sizes='32x32' ></link>
+
+
+
+
+<!-- Plugin -->
+
+
+
+
+    
+<link rel="stylesheet" href="/css/plugins/bootstrap.row.css">
+
+    
+<link rel="stylesheet" href="https://unpkg.com/@fancyapps/ui@4.0/dist/fancybox.css">
+
+    
+    
+
+
+
+
+<!-- Icon -->
+
+    
+<link rel="stylesheet" href="/css/plugins/font-awesome.min.css">
+
+
+
+
+<!-- Variable -->
+<script>window.ASYNC_CONFIG = {"hostname":"example.com","author":"Shi.Yue","root":"/","typed_text":["C++ Developer"],"theme_version":"2.2.4","theme":{"switch":true,"default":"style-light"},"favicon":{"logo":"/img/favicon.svg","icon16":"/img/favicon.svg","icon32":"/img/favicon.svg","apple_touch_icon":null,"webmanifest":null,"visibilitychange":false,"hidden":"/failure.ico","show_text":"(/≧▽≦/)Hey! Good again!","hide_text":"(●—●)Oh, crash!"},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}.","hits":"${hits} results found","hits_time":"${hits} results found in ${time} ms","author":"Post author: ","copyright_link":"Post link: ","copyright_license_title":"Copyright Notice: ","copyright_license_content":"All articles in this blog are licensed under undefined unless otherwise stated.","copy_success":"Copied","copy_failure":"Copy failed","open_read_mode":"Enter reading mode","exit_read_mode":"Exit reading mode","notice_outdate_message":"It has been undefined days since the last update, the content of the article may be outdated.","sticky":"TOP","just":"Just","min":"minutes ago","hour":"hours ago","day":"days ago","month":"months ago"},"swup":false,"plugin":{"flickr_justified_gallery":"https://unpkg.com/flickr-justified-gallery@latest/dist/fjGallery.min.js"},"icons":{"sun":"far fa-sun","moon":"far fa-moon","play":"fas fa-play","email":"far fa-envelope","next":"fas fa-arrow-right","calendar":"far fa-calendar-alt","clock":"far fa-clock","user":"far fa-user","back_top":"fas fa-arrow-up","close":"fas fa-times","search":"fas fa-search","reward":"fas fa-hand-holding-usd","toc_tag":"fas fa-th-list","read":"fas fa-book-reader","arrows":"fas fa-arrows-alt-h","double_arrows":"fas fa-angle-double-down","copy":"fas fa-copy"},"icontype":"font","highlight":{"plugin":"highlighjs","theme":true,"copy":true,"lang":true,"title":"default","height_limit":false},"toc":{"post_title":false},"live_time":{"start_time":"","prefix":"The blog has been lovely to run undefined day"},"danmu":{"enable":false,"el":".trm-banner"}};</script>
+<script id="async-page-config">window.PAGE_CONFIG = {"isPost":true,"isHome":false,"postUpdate":"2026-10-14 21:18:32"};</script>
+
+<!-- Theme mode css -->
+<link data-swup-theme rel="stylesheet" href="/css/index.css?v=2.2.4" id="trm-switch-style">
+<script>
+    let defaultMode = ASYNC_CONFIG.theme.default !=='auto' ?  ASYNC_CONFIG.theme.default : (window.matchMedia("(prefers-color-scheme: light)").matches ? 'style-light' : 'style-dark')
+    let catchMode = localStorage.getItem('theme-mode') || defaultMode;
+    let type = catchMode === 'style-dark' ? 'add' : 'remove';
+    document.documentElement.classList[type]('dark')
+</script>
+
+<!-- CDN -->
+
+
+    
+    
+
+
+
+<!-- Site Analytics -->
+
+ 
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+
+  <!-- app wrapper -->
+  <div class="trm-app-frame">
+
+    <!-- page preloader -->
+    <div class="trm-preloader">
+    <div class="trm-holder">
+        <div class="preloader">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+</div>
+    <!-- page preloader end -->
+
+    <!-- change mode preloader -->
+    <div class="trm-mode-swich-animation-frame">
+    <div class="trm-mode-swich-animation">
+        <i class="i-sun"><i class="iconfont far fa-sun"></i></i>
+        <div class="trm-horizon"></div>
+        <i class="i-moon"><i class="iconfont far fa-moon"></i></i>
+    </div>
+</div>
+    <!-- change mode preloader end -->
+
+      <!-- scroll container -->
+      <div id="trm-dynamic-content" class="trm-swup-animation">
+        <div id="trm-scroll-container" class="trm-scroll-container" style="opacity: 0">
+            <!-- top bar -->
+            <header class="trm-top-bar">
+	<div class="container">
+		<div class="trm-left-side">
+			<!-- logo -->
+<a href="/" class="trm-logo-frame trm-anima-link">
+    
+        <img alt="logo" src="/img/favicon.svg">
+    
+    
+        <div class="trm-logo-text">
+            Shi<span>Yue</span>
+        </div>
+    
+</a>
+<!-- logo end -->
+		</div>
+		<div class="trm-right-side">
+			<!-- menu -->
+<div class="trm-menu">
+    <nav>
+        <ul>
+            
+            <li class="menu-item-has-children ">
+                <a  href="/" target="">
+                    主页
+                </a>
+                
+            </li>
+            
+            <li class="menu-item-has-children ">
+                <a data-no-swup href="/archives/" target="">
+                    归档
+                </a>
+                
+                <ul>
+                    
+                    <li>
+                        <a  href="/categories/" target="">
+                            分类
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a  href="/tags/" target="">
+                            标签
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a  href="/archives/" target="">
+                            时间线
+                        </a>
+                    </li>
+                    
+                </ul>
+                
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+<!-- menu end -->
+			
+    <!-- mode switcher place -->
+    <div class="trm-mode-switcher-place">
+        <div class="trm-mode-switcher">
+            <i class="iconfont far fa-sun"></i>
+            <input class="tgl tgl-light" id="trm-swich" type="checkbox">
+            <label class="trm-swich" for="trm-swich"></label>
+            <i class="iconfont far fa-moon"></i>
+        </div>
+    </div>
+    <!-- mode switcher place end -->
+
+			
+		</div>
+		<div class="trm-menu-btn">
+			<span></span>
+		</div>
+	</div>
+</header>
+            <!-- top bar end -->
+
+            <!-- body -->
+            
+<div class="trm-content-start">
+    <!-- banner -->
+    <div class="trm-banner">
+    
+    <!-- banner cover -->
+    <img style="object-position:top;object-fit:cover;" alt="banner" class="trm-banner-cover" src="/img/banner.png">
+    <!-- banner cover end -->
+    
+
+    <!-- banner content -->
+    <div class="trm-banner-content trm-overlay">
+        <div class="container">
+            <div class="row">
+                
+                <div class="col-lg-4"></div>
+                
+                <div class="col-lg-8">
+
+                    <!-- banner title -->
+                    <div class="trm-banner-text ">
+                        <div class="trm-label trm-mb-20">
+                            NEWS LETTER
+                        </div>
+                        <h1 class="trm-mb-30 trm-hsmb-font">
+                            Git Rebase 变基深度指南
+                        </h1>
+
+                        
+                            <ul class="trm-breadcrumbs trm-label">
+                                <li>
+                                    <a href="/" class="trm-anima-link">Home</a>
+                                </li>
+                                <li>
+                                    <span>
+                                        2025
+                                    </span>
+                                </li>
+                            </ul>
+                        
+                    </div>
+                    <!-- banner title end -->
+
+                    <!-- scroll hint -->
+                    <span id="scroll-triger" class="trm-scroll-hint-frame">
+                        <div class="trm-scroll-hint"></div>
+                        <span class="trm-label">Scroll down</span>
+                    </span>
+                    <!-- scroll hint end -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- banner content end -->
+</div>
+    <!-- banner end -->
+    <div class="container">
+        <div class="row">
+            
+                <div class="trm-page-sidebar col-lg-4 hidden-sm">
+                    <!-- main card -->
+                    <div class="trm-main-card-frame trm-sidebar">
+    <div class="trm-main-card"> 
+        <!-- card header -->
+<div class="trm-mc-header">
+    <div class="trm-avatar-frame trm-mb-20">
+        <img alt="Avatar" class="trm-avatar" src="/img/avatar.jpg">
+    </div>
+    <h5 class="trm-name trm-mb-15">
+        Shi.Yue
+    </h5>
+    
+        <div class="trm-label">
+            I`m
+            <span class="trm-typed-text">
+                <!-- Words for theme.user.typedText -->
+            </span>
+        </div>
+    
+</div>
+<!-- card header end -->
+        <!-- sidebar social -->
+
+<div class="trm-divider trm-mb-40 trm-mt-40"></div>
+<div class="trm-social">
+    
+        <a href="https://github.com/shiyue-code/" title="github" rel="nofollow" target="_blank">
+            <i class="iconfont fab fa-github"></i>
+        </a>
+    
+</div>
+
+<!-- sidebar social end -->
+        <!-- info -->
+<div class="trm-divider trm-mb-40 trm-mt-40"></div>
+<ul class="trm-table trm-mb-20">
+    
+        <li>
+            <div class="trm-label">
+                github:
+            </div>
+            <div class="trm-label trm-label-light">
+                https://github.com/shiyue-code/
+            </div>
+        </li>
+    
+</ul>
+<!-- info end -->
+
+        
+    <div class="trm-divider trm-mb-40 trm-mt-40"></div>
+    <!-- action button -->
+    <div class="text-center">
+        <a href="mailto:shiyue01oct@foxmail.com" class="trm-btn">
+            Contact Me
+            <i class="iconfont far fa-envelope"></i>
+        </a>
+    </div>
+    <!-- action button end -->
+
+    </div>
+</div>
+                    <!-- main card end -->
+                </div>
+            
+            <div class="trm-page-content col-lg-8">
+                <div id="trm-content" class="trm-content">
+                    <div class="trm-post-info row hidden-sm">
+    <div class="col-sm-4">
+        <div class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-calendar-alt trm-icon"></i><br>
+            08/01
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-clock trm-icon"></i><br>
+            22:16
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div id="post-author" class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-user trm-icon"></i><br>
+            Shi.Yue
+        </div>
+    </div>
+</div>
+<div class="trm-card ">
+    <article id="article-container" class="trm-publication">
+    <h1 id="Git-Rebase（变基）深度指南"><a href="#Git-Rebase（变基）深度指南" class="headerlink" title="Git Rebase（变基）深度指南"></a>Git Rebase（变基）深度指南</h1><p><code>git rebase</code> 用于将一个分支上的修改“重新基地化”到另一个分支上。与 <code>git merge</code> 不同，Rebase 会修改提交历史，创造出一条干净、线性的历史提交线。</p>
+<hr>
+<h2 id="1-基础用法：消除分支分叉"><a href="#1-基础用法：消除分支分叉" class="headerlink" title="1. 基础用法：消除分支分叉"></a>1. 基础用法：消除分支分叉</h2><p>在特性分支开发完毕、准备合并回主分支前，可以变基到最新的主分支，使提交历史保持一条直线：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git checkout feature</span><br><span class="line">git rebase main</span><br><span class="line"></span><br><span class="line"><span class="comment"># 若需要推送回远程仓库（注意：会重写历史）</span></span><br><span class="line">git push --force-with-lease</span><br></pre></td></tr></table></figure>
+
+<div class="trm-note warning"><div class="trm-note-title">IMPORTANT</div><p><strong>变基黄金法则</strong>：<br><strong>绝对不要在公共分支（例如已推送到远程且有其他人协同开发的 main&#x2F;master 或 release 分支）上进行 Rebase。</strong><br>重写公共分支的历史会导致其他协作者的提交树发生严重错乱！</p>
+</div>
+
+<hr>
+<h2 id="2-交互式变基：合并与整理提交历史"><a href="#2-交互式变基：合并与整理提交历史" class="headerlink" title="2. 交互式变基：合并与整理提交历史"></a>2. 交互式变基：合并与整理提交历史</h2><p>交互式变基（<code>git rebase -i</code>）允许我们在提交合并前对历史记录进行修剪、合并或删除。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 修改最近的 3 次提交</span></span><br><span class="line">git rebase -i HEAD~3</span><br></pre></td></tr></table></figure>
+
+<p>在打开的文本编辑器中，你可以调整每次提交前面的关键字：</p>
+<table>
+<thead>
+<tr>
+<th align="left">动作关键字</th>
+<th align="left">简称</th>
+<th align="left">作用</th>
+<th align="left">适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><code>pick</code></strong></td>
+<td align="left"><code>p</code></td>
+<td align="left">保留该提交（默认操作）</td>
+<td align="left">无需修改的提交</td>
+</tr>
+<tr>
+<td align="left"><strong><code>squash</code></strong></td>
+<td align="left"><code>s</code></td>
+<td align="left">保留该提交，但将其合并到前一个提交中，<strong>保留</strong>两个提交的注释信息</td>
+<td align="left">整合功能相关的零碎提交</td>
+</tr>
+<tr>
+<td align="left"><strong><code>fixup</code></strong></td>
+<td align="left"><code>f</code></td>
+<td align="left">类似于 <code>squash</code>，但合并时<strong>直接丢弃</strong>当前提交的注释信息</td>
+<td align="left">合并用于修复 bug 的琐碎提交</td>
+</tr>
+<tr>
+<td align="left"><strong><code>edit</code></strong></td>
+<td align="left"><code>e</code></td>
+<td align="left">暂停变基，允许你修改此提交的内容，或拆分该提交</td>
+<td align="left">修改旧的提交代码或历史说明</td>
+</tr>
+<tr>
+<td align="left"><strong><code>drop</code></strong></td>
+<td align="left"><code>d</code></td>
+<td align="left">彻底丢弃&#x2F;删除该提交</td>
+<td align="left">移除误提交的文件或敏感数据</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="3-解决-Rebase-过程中的冲突"><a href="#3-解决-Rebase-过程中的冲突" class="headerlink" title="3. 解决 Rebase 过程中的冲突"></a>3. 解决 Rebase 过程中的冲突</h2><p>如果在变基过程中遇到冲突，Git 会暂停 Rebase 状态。请按照以下步骤解决：</p>
+<ol>
+<li><strong>手动编辑冲突文件</strong>，解决代码冲突。</li>
+<li>将解决后的文件加入暂存区：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git add &lt;conflict-file&gt;</span><br></pre></td></tr></table></figure></li>
+<li>**不要执行 <code>git commit</code>**，直接继续变基流程：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase --<span class="built_in">continue</span></span><br></pre></td></tr></table></figure></li>
+<li>如果中途反悔，想回到 Rebase 之前的状态：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase --abort</span><br></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h2 id="4-高级技巧：变基到新的父分支-onto"><a href="#4-高级技巧：变基到新的父分支-onto" class="headerlink" title="4. 高级技巧：变基到新的父分支 --onto"></a>4. 高级技巧：变基到新的父分支 <code>--onto</code></h2><p>在复杂的特性分支依赖中，可以使用 <code>--onto</code> 将某个分支的一部分直接剪切并贴到新的分支上。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 场景：从 feature-A 衍生出了 feature-B，现在想将 feature-B 独立出来直接基于 main 变基</span></span><br><span class="line"><span class="comment"># 命令格式：git rebase --onto &lt;new-parent&gt; &lt;old-parent&gt; &lt;branch-to-move&gt;</span></span><br><span class="line">git rebase --onto main feature-A feature-B</span><br></pre></td></tr></table></figure>
+</article>
+    
+    
+
+</div>
+<div class="trm-post-next-prev row">
+    <div class="col-lg-12">
+        <!-- title -->
+        <h5 class="trm-title-with-divider">
+            Other Articles
+            <span data-number="02"></span>
+        </h5>
+    </div>
+    
+        <div class="col-lg-6">
+    <div class="trm-blog-card trm-scroll-animation">
+        <a href="/2025/08/01/Git%20Cherry-Pick%20%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/" class="trm-cover-frame trm-anima-link">
+            
+            
+                <img alt="cover" class="no-fancybox" src="/img/block.jpg">
+            
+        </a>
+        
+        <div class="trm-card-descr">
+            <div class="trm-label trm-category trm-mb-20">
+                <a href=" /categories/Git/">
+                    Git
+                </a>
+            </div>
+            <h5>
+                <a href="/2025/08/01/Git%20Cherry-Pick%20%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/" class="trm-anima-link">
+                    Git Cherry-Pick 实战指南
+                </a>
+            </h5>
+            <div class="trm-divider trm-mb-20 trm-mt-20"></div>
+            <ul class="trm-card-data trm-label">
+                <li>25/08/01</li>
+                <li>22:16</li>
+                
+                
+            </ul>
+        </div>
+    </div>
+</div>
+    
+    
+        <div class="col-lg-6">
+    <div class="trm-blog-card trm-scroll-animation">
+        <a href="/2025/08/01/Git%20Pull%20Prune%20%E8%87%AA%E5%8A%A8%E6%B8%85%E7%90%86%E5%A4%B1%E6%95%88%E5%88%86%E6%94%AF/" class="trm-cover-frame trm-anima-link">
+            
+            
+                <img alt="cover" class="no-fancybox" src="/img/block.jpg">
+            
+        </a>
+        
+        <div class="trm-card-descr">
+            <div class="trm-label trm-category trm-mb-20">
+                <a href=" /categories/Git/">
+                    Git
+                </a>
+            </div>
+            <h5>
+                <a href="/2025/08/01/Git%20Pull%20Prune%20%E8%87%AA%E5%8A%A8%E6%B8%85%E7%90%86%E5%A4%B1%E6%95%88%E5%88%86%E6%94%AF/" class="trm-anima-link">
+                    Git Pull Prune 自动清理失效分支
+                </a>
+            </h5>
+            <div class="trm-divider trm-mb-20 trm-mt-20"></div>
+            <ul class="trm-card-data trm-label">
+                <li>25/08/01</li>
+                <li>22:16</li>
+                
+                
+            </ul>
+        </div>
+    </div>
+</div>
+    
+</div>
+
+    
+
+
+
+                    <div class="trm-divider footer-divider"></div>
+
+                    <!-- footer -->
+                    <footer class="trm-footer-card trm-scroll-animation">
+
+    
+
+    
+
+    
+        <div class="trm-footer-item">
+            <span>
+                Powered by <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> v7.3.0
+            </span>
+            <span class="footer-separator" data-separator=" | "></span>
+            <span> 
+                Theme - 
+                <a rel="noopener" href='https://github.com/MaLuns/hexo-theme-async' target='_blank'>Async</a>
+                v2.2.4
+            </span>
+        </div>
+      
+
+     
+
+     
+</footer>
+                    <!-- footer end -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            <!-- body end -->
+
+            
+
+    <div id="post-toc" class="trm-post-toc">
+      <div class="trm-post-toc-header">
+        Article table of contents
+				<span id="post-toc-top">
+					TOP
+				</span>
+      </div>
+      <div class="trm-post-toc-content">
+        <ol class="trm-toc"><li class="trm-toc-item trm-toc-level-1" title="Git Rebase（变基）深度指南"><a rel="nofollow" class="trm-toc-link" href="#Git-Rebase（变基）深度指南"><span class="trm-toc-number">1.</span> <span class="trm-toc-text">Git Rebase（变基）深度指南</span></a><ol class="trm-toc-child"><li class="trm-toc-item trm-toc-level-2" title="1. 基础用法：消除分支分叉"><a rel="nofollow" class="trm-toc-link" href="#1-基础用法：消除分支分叉"><span class="trm-toc-number">1.1.</span> <span class="trm-toc-text">1. 基础用法：消除分支分叉</span></a></li><li class="trm-toc-item trm-toc-level-2" title="2. 交互式变基：合并与整理提交历史"><a rel="nofollow" class="trm-toc-link" href="#2-交互式变基：合并与整理提交历史"><span class="trm-toc-number">1.2.</span> <span class="trm-toc-text">2. 交互式变基：合并与整理提交历史</span></a></li><li class="trm-toc-item trm-toc-level-2" title="3. 解决 Rebase 过程中的冲突"><a rel="nofollow" class="trm-toc-link" href="#3-解决-Rebase-过程中的冲突"><span class="trm-toc-number">1.3.</span> <span class="trm-toc-text">3. 解决 Rebase 过程中的冲突</span></a></li><li class="trm-toc-item trm-toc-level-2" title="4. 高级技巧：变基到新的父分支 --onto"><a rel="nofollow" class="trm-toc-link" href="#4-高级技巧：变基到新的父分支-onto"><span class="trm-toc-number">1.4.</span> <span class="trm-toc-text">4. 高级技巧：变基到新的父分支 --onto</span></a></li></ol></li></ol>
+      </div>
+    </div>
+
+            
+<div class="trm-fixed-container">
+    
+        <div class="trm-fixed-btn post-toc-btn" data-title="Open toc">
+            <i class="iconfont fas fa-th-list"></i>
+        </div>
+    
+    
+        <div class="trm-fixed-btn" data-title="Read Mode" onclick="asyncFun.switchReadMode()">
+            <i class="iconfont fas fa-book-reader"></i>
+        </div>
+    
+    
+    <div id="trm-back-top" class="trm-fixed-btn" data-title="Back To Top">
+        <i class="iconfont fas fa-arrow-up"></i>
+    </div>
+</div>
+        </div>
+      </div>
+      <!-- scroll container end -->
+  </div>
+  <!-- app wrapper end -->
+
+  
+  <!-- Plugin -->
+
+
+
+
+    
+    
+<script src="https://unpkg.com/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+
+    
+
+    
+        <script src="/js/plugins/typing.js?v=2.2.4"></script>
+    
+
+    
+
+    <!-- 数学公式 -->
+    
+
+    <!-- 评论插件 -->
+    
+        
+
+        
+    
+
+		
+
+
+
+
+    <!-- Service Worker -->
+    
+    <!-- baidu push -->
+    
+
+
+<script id="async-script" src="/js/main.js?v=2.2.4"></script>
+
+<!-- CDN -->
+
+
+    
+
+    
+
+    
+
+
+
+</body>
+
+</html>

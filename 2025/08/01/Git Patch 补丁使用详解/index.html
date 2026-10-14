@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="x5-fullscreen" content="true">
+<meta name="full-screen" content="yes">
+<meta name="theme-color" content="#317EFB" />
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=0" name="viewport">
+<meta name="description" content="Git Patch（补丁）完整使用指南Git Patch 用于记录和共享代码变更，它将代码差异打包成文本文件。这在跨物理网络、在无法访问同一远程仓库的团队间传递和应用修改时非常有用。 Git 提供了两种主要形式的 Patch：  git diff 生成的补丁：只包含纯代码差异，不包含提交历史（作者、时间、提交信息）。 git format-patch 生成的补丁：标准的邮件形式补丁，保留了完整的提">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git Patch 补丁使用详解">
+<meta property="og:url" content="http://example.com/2025/08/01/Git%20Patch%20%E8%A1%A5%E4%B8%81%E4%BD%BF%E7%94%A8%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Git Patch（补丁）完整使用指南Git Patch 用于记录和共享代码变更，它将代码差异打包成文本文件。这在跨物理网络、在无法访问同一远程仓库的团队间传递和应用修改时非常有用。 Git 提供了两种主要形式的 Patch：  git diff 生成的补丁：只包含纯代码差异，不包含提交历史（作者、时间、提交信息）。 git format-patch 生成的补丁：标准的邮件形式补丁，保留了完整的提">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-08-01T14:16:15.000Z">
+<meta property="article:modified_time" content="2026-10-14T13:18:32.565Z">
+<meta property="article:author" content="Shi.Yue">
+<meta property="article:tag" content="Git">
+<meta property="article:tag" content="版本控制">
+<meta property="article:tag" content="协作工具">
+<meta name="twitter:card" content="summary">
+
+
+<title >Git Patch 补丁使用详解</title>
+
+<!-- Favicon -->
+
+    <link href='/img/favicon.svg?v=2.2.4' rel='icon' type='image/png' sizes='16x16' ></link>
+
+
+    <link href='/img/favicon.svg?v=2.2.4' rel='icon' type='image/png' sizes='32x32' ></link>
+
+
+
+
+<!-- Plugin -->
+
+
+
+
+    
+<link rel="stylesheet" href="/css/plugins/bootstrap.row.css">
+
+    
+<link rel="stylesheet" href="https://unpkg.com/@fancyapps/ui@4.0/dist/fancybox.css">
+
+    
+    
+
+
+
+
+<!-- Icon -->
+
+    
+<link rel="stylesheet" href="/css/plugins/font-awesome.min.css">
+
+
+
+
+<!-- Variable -->
+<script>window.ASYNC_CONFIG = {"hostname":"example.com","author":"Shi.Yue","root":"/","typed_text":["C++ Developer"],"theme_version":"2.2.4","theme":{"switch":true,"default":"style-light"},"favicon":{"logo":"/img/favicon.svg","icon16":"/img/favicon.svg","icon32":"/img/favicon.svg","apple_touch_icon":null,"webmanifest":null,"visibilitychange":false,"hidden":"/failure.ico","show_text":"(/≧▽≦/)Hey! Good again!","hide_text":"(●—●)Oh, crash!"},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}.","hits":"${hits} results found","hits_time":"${hits} results found in ${time} ms","author":"Post author: ","copyright_link":"Post link: ","copyright_license_title":"Copyright Notice: ","copyright_license_content":"All articles in this blog are licensed under undefined unless otherwise stated.","copy_success":"Copied","copy_failure":"Copy failed","open_read_mode":"Enter reading mode","exit_read_mode":"Exit reading mode","notice_outdate_message":"It has been undefined days since the last update, the content of the article may be outdated.","sticky":"TOP","just":"Just","min":"minutes ago","hour":"hours ago","day":"days ago","month":"months ago"},"swup":false,"plugin":{"flickr_justified_gallery":"https://unpkg.com/flickr-justified-gallery@latest/dist/fjGallery.min.js"},"icons":{"sun":"far fa-sun","moon":"far fa-moon","play":"fas fa-play","email":"far fa-envelope","next":"fas fa-arrow-right","calendar":"far fa-calendar-alt","clock":"far fa-clock","user":"far fa-user","back_top":"fas fa-arrow-up","close":"fas fa-times","search":"fas fa-search","reward":"fas fa-hand-holding-usd","toc_tag":"fas fa-th-list","read":"fas fa-book-reader","arrows":"fas fa-arrows-alt-h","double_arrows":"fas fa-angle-double-down","copy":"fas fa-copy"},"icontype":"font","highlight":{"plugin":"highlighjs","theme":true,"copy":true,"lang":true,"title":"default","height_limit":false},"toc":{"post_title":false},"live_time":{"start_time":"","prefix":"The blog has been lovely to run undefined day"},"danmu":{"enable":false,"el":".trm-banner"}};</script>
+<script id="async-page-config">window.PAGE_CONFIG = {"isPost":true,"isHome":false,"postUpdate":"2026-10-14 21:18:32"};</script>
+
+<!-- Theme mode css -->
+<link data-swup-theme rel="stylesheet" href="/css/index.css?v=2.2.4" id="trm-switch-style">
+<script>
+    let defaultMode = ASYNC_CONFIG.theme.default !=='auto' ?  ASYNC_CONFIG.theme.default : (window.matchMedia("(prefers-color-scheme: light)").matches ? 'style-light' : 'style-dark')
+    let catchMode = localStorage.getItem('theme-mode') || defaultMode;
+    let type = catchMode === 'style-dark' ? 'add' : 'remove';
+    document.documentElement.classList[type]('dark')
+</script>
+
+<!-- CDN -->
+
+
+    
+    
+
+
+
+<!-- Site Analytics -->
+
+ 
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+
+  <!-- app wrapper -->
+  <div class="trm-app-frame">
+
+    <!-- page preloader -->
+    <div class="trm-preloader">
+    <div class="trm-holder">
+        <div class="preloader">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+</div>
+    <!-- page preloader end -->
+
+    <!-- change mode preloader -->
+    <div class="trm-mode-swich-animation-frame">
+    <div class="trm-mode-swich-animation">
+        <i class="i-sun"><i class="iconfont far fa-sun"></i></i>
+        <div class="trm-horizon"></div>
+        <i class="i-moon"><i class="iconfont far fa-moon"></i></i>
+    </div>
+</div>
+    <!-- change mode preloader end -->
+
+      <!-- scroll container -->
+      <div id="trm-dynamic-content" class="trm-swup-animation">
+        <div id="trm-scroll-container" class="trm-scroll-container" style="opacity: 0">
+            <!-- top bar -->
+            <header class="trm-top-bar">
+	<div class="container">
+		<div class="trm-left-side">
+			<!-- logo -->
+<a href="/" class="trm-logo-frame trm-anima-link">
+    
+        <img alt="logo" src="/img/favicon.svg">
+    
+    
+        <div class="trm-logo-text">
+            Shi<span>Yue</span>
+        </div>
+    
+</a>
+<!-- logo end -->
+		</div>
+		<div class="trm-right-side">
+			<!-- menu -->
+<div class="trm-menu">
+    <nav>
+        <ul>
+            
+            <li class="menu-item-has-children ">
+                <a  href="/" target="">
+                    主页
+                </a>
+                
+            </li>
+            
+            <li class="menu-item-has-children ">
+                <a data-no-swup href="/archives/" target="">
+                    归档
+                </a>
+                
+                <ul>
+                    
+                    <li>
+                        <a  href="/categories/" target="">
+                            分类
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a  href="/tags/" target="">
+                            标签
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a  href="/archives/" target="">
+                            时间线
+                        </a>
+                    </li>
+                    
+                </ul>
+                
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+<!-- menu end -->
+			
+    <!-- mode switcher place -->
+    <div class="trm-mode-switcher-place">
+        <div class="trm-mode-switcher">
+            <i class="iconfont far fa-sun"></i>
+            <input class="tgl tgl-light" id="trm-swich" type="checkbox">
+            <label class="trm-swich" for="trm-swich"></label>
+            <i class="iconfont far fa-moon"></i>
+        </div>
+    </div>
+    <!-- mode switcher place end -->
+
+			
+		</div>
+		<div class="trm-menu-btn">
+			<span></span>
+		</div>
+	</div>
+</header>
+            <!-- top bar end -->
+
+            <!-- body -->
+            
+<div class="trm-content-start">
+    <!-- banner -->
+    <div class="trm-banner">
+    
+    <!-- banner cover -->
+    <img style="object-position:top;object-fit:cover;" alt="banner" class="trm-banner-cover" src="/img/banner.png">
+    <!-- banner cover end -->
+    
+
+    <!-- banner content -->
+    <div class="trm-banner-content trm-overlay">
+        <div class="container">
+            <div class="row">
+                
+                <div class="col-lg-4"></div>
+                
+                <div class="col-lg-8">
+
+                    <!-- banner title -->
+                    <div class="trm-banner-text ">
+                        <div class="trm-label trm-mb-20">
+                            NEWS LETTER
+                        </div>
+                        <h1 class="trm-mb-30 trm-hsmb-font">
+                            Git Patch 补丁使用详解
+                        </h1>
+
+                        
+                            <ul class="trm-breadcrumbs trm-label">
+                                <li>
+                                    <a href="/" class="trm-anima-link">Home</a>
+                                </li>
+                                <li>
+                                    <span>
+                                        2025
+                                    </span>
+                                </li>
+                            </ul>
+                        
+                    </div>
+                    <!-- banner title end -->
+
+                    <!-- scroll hint -->
+                    <span id="scroll-triger" class="trm-scroll-hint-frame">
+                        <div class="trm-scroll-hint"></div>
+                        <span class="trm-label">Scroll down</span>
+                    </span>
+                    <!-- scroll hint end -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- banner content end -->
+</div>
+    <!-- banner end -->
+    <div class="container">
+        <div class="row">
+            
+                <div class="trm-page-sidebar col-lg-4 hidden-sm">
+                    <!-- main card -->
+                    <div class="trm-main-card-frame trm-sidebar">
+    <div class="trm-main-card"> 
+        <!-- card header -->
+<div class="trm-mc-header">
+    <div class="trm-avatar-frame trm-mb-20">
+        <img alt="Avatar" class="trm-avatar" src="/img/avatar.jpg">
+    </div>
+    <h5 class="trm-name trm-mb-15">
+        Shi.Yue
+    </h5>
+    
+        <div class="trm-label">
+            I`m
+            <span class="trm-typed-text">
+                <!-- Words for theme.user.typedText -->
+            </span>
+        </div>
+    
+</div>
+<!-- card header end -->
+        <!-- sidebar social -->
+
+<div class="trm-divider trm-mb-40 trm-mt-40"></div>
+<div class="trm-social">
+    
+        <a href="https://github.com/shiyue-code/" title="github" rel="nofollow" target="_blank">
+            <i class="iconfont fab fa-github"></i>
+        </a>
+    
+</div>
+
+<!-- sidebar social end -->
+        <!-- info -->
+<div class="trm-divider trm-mb-40 trm-mt-40"></div>
+<ul class="trm-table trm-mb-20">
+    
+        <li>
+            <div class="trm-label">
+                github:
+            </div>
+            <div class="trm-label trm-label-light">
+                https://github.com/shiyue-code/
+            </div>
+        </li>
+    
+</ul>
+<!-- info end -->
+
+        
+    <div class="trm-divider trm-mb-40 trm-mt-40"></div>
+    <!-- action button -->
+    <div class="text-center">
+        <a href="mailto:shiyue01oct@foxmail.com" class="trm-btn">
+            Contact Me
+            <i class="iconfont far fa-envelope"></i>
+        </a>
+    </div>
+    <!-- action button end -->
+
+    </div>
+</div>
+                    <!-- main card end -->
+                </div>
+            
+            <div class="trm-page-content col-lg-8">
+                <div id="trm-content" class="trm-content">
+                    <div class="trm-post-info row hidden-sm">
+    <div class="col-sm-4">
+        <div class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-calendar-alt trm-icon"></i><br>
+            08/01
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-clock trm-icon"></i><br>
+            22:16
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div id="post-author" class="trm-card trm-label trm-label-light text-center">
+            <i class="iconfont far fa-user trm-icon"></i><br>
+            Shi.Yue
+        </div>
+    </div>
+</div>
+<div class="trm-card ">
+    <article id="article-container" class="trm-publication">
+    <h1 id="Git-Patch（补丁）完整使用指南"><a href="#Git-Patch（补丁）完整使用指南" class="headerlink" title="Git Patch（补丁）完整使用指南"></a>Git Patch（补丁）完整使用指南</h1><p>Git Patch 用于记录和共享代码变更，它将代码差异打包成文本文件。这在跨物理网络、在无法访问同一远程仓库的团队间传递和应用修改时非常有用。</p>
+<p>Git 提供了两种主要形式的 Patch：</p>
+<ol>
+<li><strong><code>git diff</code> 生成的补丁</strong>：只包含纯代码差异，不包含提交历史（作者、时间、提交信息）。</li>
+<li><strong><code>git format-patch</code> 生成的补丁</strong>：标准的邮件形式补丁，保留了完整的提交历史和作者元数据。</li>
+</ol>
+<hr>
+<h2 id="1-创建-Patch"><a href="#1-创建-Patch" class="headerlink" title="1. 创建 Patch"></a>1. 创建 Patch</h2><h3 id="A-使用-format-patch-创建提交补丁（带提交历史）"><a href="#A-使用-format-patch-创建提交补丁（带提交历史）" class="headerlink" title="A. 使用 format-patch 创建提交补丁（带提交历史）"></a>A. 使用 <code>format-patch</code> 创建提交补丁（带提交历史）</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建最近 1 次提交的 patch 文件</span></span><br><span class="line">git format-patch HEAD~1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建特定提交的 patch</span></span><br><span class="line">git format-patch &lt;commit-hash&gt; -1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建最近 3 个提交的 patch（生成 3 个独立文件）</span></span><br><span class="line">git format-patch HEAD~3</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建指定范围内的提交补丁</span></span><br><span class="line">git format-patch &lt;starting-commit&gt;..HEAD</span><br><span class="line">git format-patch &lt;commit1&gt;..&lt;commit2&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="B-使用-diff-创建未提交更改的补丁（纯代码差异）"><a href="#B-使用-diff-创建未提交更改的补丁（纯代码差异）" class="headerlink" title="B. 使用 diff 创建未提交更改的补丁（纯代码差异）"></a>B. 使用 <code>diff</code> 创建未提交更改的补丁（纯代码差异）</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 保存当前工作区和暂存区中所有未提交的修改</span></span><br><span class="line">git diff &gt; my-changes.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保存特定文件的未提交修改</span></span><br><span class="line">git diff path/to/file &gt; file-changes.patch</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="2-应用-Patch"><a href="#2-应用-Patch" class="headerlink" title="2. 应用 Patch"></a>2. 应用 Patch</h2><p>根据补丁的生成方式，应用补丁的方式也有所不同。</p>
+<h3 id="A-应用-format-patch-补丁（推荐，使用-git-am）"><a href="#A-应用-format-patch-补丁（推荐，使用-git-am）" class="headerlink" title="A. 应用 format-patch 补丁（推荐，使用 git am）"></a>A. 应用 <code>format-patch</code> 补丁（推荐，使用 <code>git am</code>）</h3><p><code>git am</code>（Apply Mailbox）会自动将补丁作为新提交直接应用并提交到您的历史树中，自动保留原作者和提交信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 检查补丁变更的统计数据（预览）</span></span><br><span class="line">git apply --<span class="built_in">stat</span> my-patch.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 预检测试，检查是否有潜在冲突（不实际写入代码）</span></span><br><span class="line">git apply --check my-patch.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 正式应用并直接生成 Commit</span></span><br><span class="line">git am my-patch.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 批量顺序应用目录下的所有补丁</span></span><br><span class="line">git am *.patch</span><br></pre></td></tr></table></figure>
+
+<h3 id="B-应用-diff-补丁（使用-git-apply）"><a href="#B-应用-diff-补丁（使用-git-apply）" class="headerlink" title="B. 应用 diff 补丁（使用 git apply）"></a>B. 应用 <code>diff</code> 补丁（使用 <code>git apply</code>）</h3><p><code>git apply</code> 只将修改应用到工作区或暂存区，<strong>不生成新的提交</strong>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 应用代码差异到工作区（需要手动 git add 和 git commit）</span></span><br><span class="line">git apply my-changes.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 强制应用包括新增/删除文件的补丁</span></span><br><span class="line">git apply --include=<span class="string">&#x27;*&#x27;</span> my-changes.patch</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="3-常用选项"><a href="#3-常用选项" class="headerlink" title="3. 常用选项"></a>3. 常用选项</h2><h3 id="format-patch-生成选项"><a href="#format-patch-生成选项" class="headerlink" title="format-patch 生成选项"></a><code>format-patch</code> 生成选项</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -o: 指定补丁文件的输出目录</span></span><br><span class="line">git format-patch HEAD~3 -o patches/</span><br><span class="line"></span><br><span class="line"><span class="comment"># --subject-prefix: 自定义补丁标题前缀（方便邮件分组）</span></span><br><span class="line">git format-patch --subject-prefix=<span class="string">&quot;BUGFIX&quot;</span> HEAD~1</span><br><span class="line"></span><br><span class="line"><span class="comment"># --numbered: 强制给补丁文件加上 0001、0002 前缀编号（默认开启）</span></span><br><span class="line">git format-patch -3 --numbered</span><br></pre></td></tr></table></figure>
+
+<h3 id="am-应用选项"><a href="#am-应用选项" class="headerlink" title="am 应用选项"></a><code>am</code> 应用选项</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># --keep-author: 即使重新打包也绝对保留原作者姓名和邮箱</span></span><br><span class="line">git am --keep-author my-patch.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># --reject: 如果遇到冲突，强行应用不冲突的部分，并将冲突部分生成为 .rej 文件保留下来</span></span><br><span class="line">git am --reject my-patch.patch</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="4-解决补丁应用冲突"><a href="#4-解决补丁应用冲突" class="headerlink" title="4. 解决补丁应用冲突"></a>4. 解决补丁应用冲突</h2><p>在使用 <code>git am</code> 应用补丁时，如果发生代码冲突，流程会中断。请按照以下步骤处理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 执行 am 遇到冲突停止</span></span><br><span class="line">git am my-patch.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 手动打开冲突的文件，解决代码冲突（寻找并删除 &lt;&lt;&lt;&lt;&lt;&lt;&lt;、=======、&gt;&gt;&gt;&gt;&gt;&gt;&gt; 冲突标记）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 标记冲突已解决，将其放入暂存区</span></span><br><span class="line">git add &lt;resolved-files&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 继续应用后续的补丁</span></span><br><span class="line">git am --<span class="built_in">continue</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># （备选）如果您想跳过当前这个无法解决的补丁，继续应用队列中剩余的补丁</span></span><br><span class="line">git am --skip</span><br><span class="line"></span><br><span class="line"><span class="comment"># （备选）如果想彻底中止，退回到 am 执行前的干净状态</span></span><br><span class="line">git am --abort</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="5-查看与分析补丁内容"><a href="#5-查看与分析补丁内容" class="headerlink" title="5. 查看与分析补丁内容"></a>5. 查看与分析补丁内容</h2><p>在应用补丁之前，了解其内容是一个好习惯：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看补丁修改的文件列表和行数统计</span></span><br><span class="line">git apply --<span class="built_in">stat</span> patch.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出详细应用日志</span></span><br><span class="line">git apply --verbose patch.patch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 像查看普通 diff 一样查看补丁文件结构</span></span><br><span class="line">git diff --no-index /dev/null patch.patch | less</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="6-小贴士（Tips）"><a href="#6-小贴士（Tips）" class="headerlink" title="6. 小贴士（Tips）"></a>6. 小贴士（Tips）</h2><ol>
+<li><strong>二进制文件处理</strong>：默认情况下，<code>git diff</code> 和早期的补丁可能无法妥善记录二进制文件变化。对于图片或编译产物，请始终使用 <code>git format-patch</code>。</li>
+<li><strong>签名证书</strong>：团队协作中，可以使用 <code>git format-patch -s HEAD~1</code> 生成带签名的补丁（Signed-off-by），方便追溯责任人。</li>
+<li><strong>协作流程</strong>：<ul>
+<li>离线开发者：修改代码 -&gt; <code>git diff &gt; fix.patch</code> -&gt; 微信&#x2F;邮件发送补丁。</li>
+<li>接收方：<code>git apply --check fix.patch</code> -&gt; 验证无误 -&gt; <code>git apply fix.patch</code> -&gt; 代码合并。</li>
+</ul>
+</li>
+</ol>
+
+</article>
+    
+    
+
+</div>
+<div class="trm-post-next-prev row">
+    <div class="col-lg-12">
+        <!-- title -->
+        <h5 class="trm-title-with-divider">
+            Other Articles
+            <span data-number="02"></span>
+        </h5>
+    </div>
+    
+        <div class="col-lg-6">
+    <div class="trm-blog-card trm-scroll-animation">
+        <a href="/2025/08/01/C++%20%E6%A8%A1%E6%9D%BF%20SFINAE%20%E4%B8%8E%E7%B1%BB%E5%9E%8B%E6%8E%A2%E6%B5%8B/" class="trm-cover-frame trm-anima-link">
+            
+            
+                <img alt="cover" class="no-fancybox" src="/img/block.jpg">
+            
+        </a>
+        
+        <div class="trm-card-descr">
+            <div class="trm-label trm-category trm-mb-20">
+                <a href=" /categories/C/">
+                    C++
+                </a>
+            </div>
+            <h5>
+                <a href="/2025/08/01/C++%20%E6%A8%A1%E6%9D%BF%20SFINAE%20%E4%B8%8E%E7%B1%BB%E5%9E%8B%E6%8E%A2%E6%B5%8B/" class="trm-anima-link">
+                    C++ 模板 SFINAE 与类型探测
+                </a>
+            </h5>
+            <div class="trm-divider trm-mb-20 trm-mt-20"></div>
+            <ul class="trm-card-data trm-label">
+                <li>25/08/01</li>
+                <li>22:17</li>
+                
+                
+            </ul>
+        </div>
+    </div>
+</div>
+    
+    
+        <div class="col-lg-6">
+    <div class="trm-blog-card trm-scroll-animation">
+        <a href="/2025/08/01/Git%20Cherry-Pick%20%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/" class="trm-cover-frame trm-anima-link">
+            
+            
+                <img alt="cover" class="no-fancybox" src="/img/block.jpg">
+            
+        </a>
+        
+        <div class="trm-card-descr">
+            <div class="trm-label trm-category trm-mb-20">
+                <a href=" /categories/Git/">
+                    Git
+                </a>
+            </div>
+            <h5>
+                <a href="/2025/08/01/Git%20Cherry-Pick%20%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/" class="trm-anima-link">
+                    Git Cherry-Pick 实战指南
+                </a>
+            </h5>
+            <div class="trm-divider trm-mb-20 trm-mt-20"></div>
+            <ul class="trm-card-data trm-label">
+                <li>25/08/01</li>
+                <li>22:16</li>
+                
+                
+            </ul>
+        </div>
+    </div>
+</div>
+    
+</div>
+
+    
+
+
+
+                    <div class="trm-divider footer-divider"></div>
+
+                    <!-- footer -->
+                    <footer class="trm-footer-card trm-scroll-animation">
+
+    
+
+    
+
+    
+        <div class="trm-footer-item">
+            <span>
+                Powered by <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> v7.3.0
+            </span>
+            <span class="footer-separator" data-separator=" | "></span>
+            <span> 
+                Theme - 
+                <a rel="noopener" href='https://github.com/MaLuns/hexo-theme-async' target='_blank'>Async</a>
+                v2.2.4
+            </span>
+        </div>
+      
+
+     
+
+     
+</footer>
+                    <!-- footer end -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            <!-- body end -->
+
+            
+
+    <div id="post-toc" class="trm-post-toc">
+      <div class="trm-post-toc-header">
+        Article table of contents
+				<span id="post-toc-top">
+					TOP
+				</span>
+      </div>
+      <div class="trm-post-toc-content">
+        <ol class="trm-toc"><li class="trm-toc-item trm-toc-level-1" title="Git Patch（补丁）完整使用指南"><a rel="nofollow" class="trm-toc-link" href="#Git-Patch（补丁）完整使用指南"><span class="trm-toc-number">1.</span> <span class="trm-toc-text">Git Patch（补丁）完整使用指南</span></a><ol class="trm-toc-child"><li class="trm-toc-item trm-toc-level-2" title="1. 创建 Patch"><a rel="nofollow" class="trm-toc-link" href="#1-创建-Patch"><span class="trm-toc-number">1.1.</span> <span class="trm-toc-text">1. 创建 Patch</span></a><ol class="trm-toc-child"><li class="trm-toc-item trm-toc-level-3" title="A. 使用 format-patch 创建提交补丁（带提交历史）"><a rel="nofollow" class="trm-toc-link" href="#A-使用-format-patch-创建提交补丁（带提交历史）"><span class="trm-toc-number">1.1.1.</span> <span class="trm-toc-text">A. 使用 format-patch 创建提交补丁（带提交历史）</span></a></li><li class="trm-toc-item trm-toc-level-3" title="B. 使用 diff 创建未提交更改的补丁（纯代码差异）"><a rel="nofollow" class="trm-toc-link" href="#B-使用-diff-创建未提交更改的补丁（纯代码差异）"><span class="trm-toc-number">1.1.2.</span> <span class="trm-toc-text">B. 使用 diff 创建未提交更改的补丁（纯代码差异）</span></a></li></ol></li><li class="trm-toc-item trm-toc-level-2" title="2. 应用 Patch"><a rel="nofollow" class="trm-toc-link" href="#2-应用-Patch"><span class="trm-toc-number">1.2.</span> <span class="trm-toc-text">2. 应用 Patch</span></a><ol class="trm-toc-child"><li class="trm-toc-item trm-toc-level-3" title="A. 应用 format-patch 补丁（推荐，使用 git am）"><a rel="nofollow" class="trm-toc-link" href="#A-应用-format-patch-补丁（推荐，使用-git-am）"><span class="trm-toc-number">1.2.1.</span> <span class="trm-toc-text">A. 应用 format-patch 补丁（推荐，使用 git am）</span></a></li><li class="trm-toc-item trm-toc-level-3" title="B. 应用 diff 补丁（使用 git apply）"><a rel="nofollow" class="trm-toc-link" href="#B-应用-diff-补丁（使用-git-apply）"><span class="trm-toc-number">1.2.2.</span> <span class="trm-toc-text">B. 应用 diff 补丁（使用 git apply）</span></a></li></ol></li><li class="trm-toc-item trm-toc-level-2" title="3. 常用选项"><a rel="nofollow" class="trm-toc-link" href="#3-常用选项"><span class="trm-toc-number">1.3.</span> <span class="trm-toc-text">3. 常用选项</span></a><ol class="trm-toc-child"><li class="trm-toc-item trm-toc-level-3" title="format-patch 生成选项"><a rel="nofollow" class="trm-toc-link" href="#format-patch-生成选项"><span class="trm-toc-number">1.3.1.</span> <span class="trm-toc-text">format-patch 生成选项</span></a></li><li class="trm-toc-item trm-toc-level-3" title="am 应用选项"><a rel="nofollow" class="trm-toc-link" href="#am-应用选项"><span class="trm-toc-number">1.3.2.</span> <span class="trm-toc-text">am 应用选项</span></a></li></ol></li><li class="trm-toc-item trm-toc-level-2" title="4. 解决补丁应用冲突"><a rel="nofollow" class="trm-toc-link" href="#4-解决补丁应用冲突"><span class="trm-toc-number">1.4.</span> <span class="trm-toc-text">4. 解决补丁应用冲突</span></a></li><li class="trm-toc-item trm-toc-level-2" title="5. 查看与分析补丁内容"><a rel="nofollow" class="trm-toc-link" href="#5-查看与分析补丁内容"><span class="trm-toc-number">1.5.</span> <span class="trm-toc-text">5. 查看与分析补丁内容</span></a></li><li class="trm-toc-item trm-toc-level-2" title="6. 小贴士（Tips）"><a rel="nofollow" class="trm-toc-link" href="#6-小贴士（Tips）"><span class="trm-toc-number">1.6.</span> <span class="trm-toc-text">6. 小贴士（Tips）</span></a></li></ol></li></ol>
+      </div>
+    </div>
+
+            
+<div class="trm-fixed-container">
+    
+        <div class="trm-fixed-btn post-toc-btn" data-title="Open toc">
+            <i class="iconfont fas fa-th-list"></i>
+        </div>
+    
+    
+        <div class="trm-fixed-btn" data-title="Read Mode" onclick="asyncFun.switchReadMode()">
+            <i class="iconfont fas fa-book-reader"></i>
+        </div>
+    
+    
+    <div id="trm-back-top" class="trm-fixed-btn" data-title="Back To Top">
+        <i class="iconfont fas fa-arrow-up"></i>
+    </div>
+</div>
+        </div>
+      </div>
+      <!-- scroll container end -->
+  </div>
+  <!-- app wrapper end -->
+
+  
+  <!-- Plugin -->
+
+
+
+
+    
+    
+<script src="https://unpkg.com/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+
+    
+
+    
+        <script src="/js/plugins/typing.js?v=2.2.4"></script>
+    
+
+    
+
+    <!-- 数学公式 -->
+    
+
+    <!-- 评论插件 -->
+    
+        
+
+        
+    
+
+		
+
+
+
+
+    <!-- Service Worker -->
+    
+    <!-- baidu push -->
+    
+
+
+<script id="async-script" src="/js/main.js?v=2.2.4"></script>
+
+<!-- CDN -->
+
+
+    
+
+    
+
+    
+
+
+
+</body>
+
+</html>
